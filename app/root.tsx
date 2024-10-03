@@ -6,6 +6,13 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
+import appStyleHref from "./app.css?url";
+import { LinksFunction } from "@remix-run/node";
+
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: appStyleHref },
+];
+
 export default function App() {
   return (
     <html lang="en">
