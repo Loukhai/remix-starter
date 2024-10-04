@@ -1,18 +1,36 @@
-import { Form } from "@remix-run/react";
+import { LoaderFunctionArgs } from "@remix-run/node";
+import {
+  Form,
+  useLoaderData,
+  isRouteErrorResponse,
+  useRouteError,
+} from "@remix-run/react";
 import { FunctionComponent } from "react";
-import { ContactRecord } from "~/data";
+import invariant from "tiny-invariant";
+import { ContactRecord, getContact } from "~/data";
+
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+  const { contactId } = params;
+
+  //check the params name if exist
+  invariant(contactId, "Missing contactId param");
+
+  const contact = await getContact(contactId);
+  //if the contact not founded in data
+  if (!contact) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  //make loader happy 😁
+  return { contact };
+};
 
 export default function Contact() {
-  const contact = {
-    first: "Your",
-    last: "Name",
-    avatar: "https://placecats.com/200/200",
-    twitter: "your_handle",
-    notes: "Some notes",
-    favorite: true,
-  };
+  const { contact } = useLoaderData<typeof loader>();
+  // console.log("🚀 ~ Contact ~ contact:", contact);
+
   return (
-    <div id='contact'>
+    <div id="contact">
       {/* image */}
       <div>
         <img
@@ -44,13 +62,13 @@ export default function Contact() {
         {/* notes */}
         {contact.notes ? <p>{contact.notes}</p> : null}
         <div>
-          <Form action='edit'>
-            <button type='submit'>Edit</button>
+          <Form action="edit">
+            <button type="submit">Edit</button>
           </Form>
 
           <Form
-            action='destroy'
-            method='post'
+            action="destroy"
+            method="post"
             onSubmit={(event) => {
               const response = confirm(
                 "Please confirm you want to delete this record."
@@ -60,7 +78,7 @@ export default function Contact() {
               }
             }}
           >
-            <button type='submit'>Delete</button>
+            <button type="submit">Delete</button>
           </Form>
         </div>
       </div>
@@ -74,10 +92,10 @@ const Favorite: FunctionComponent<{
   const favorite = contact.favorite;
 
   return (
-    <Form method='post'>
+    <Form method="post">
       <button
         aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
-        name='favorite'
+        name="favorite"
         value={favorite ? "false" : "true"}
       >
         {favorite ? "★" : "☆"}
