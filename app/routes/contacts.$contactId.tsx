@@ -103,3 +103,18 @@ const Favorite: FunctionComponent<{
     </Form>
   );
 };
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <p>no contact found</p>
+        <h1>message</h1>
+        <pre>data:{error.data}</pre>
+        <pre>status:{error.status}</pre>
+        <pre>statusText:{error.statusText}</pre>
+      </div>
+    );
+  }
+}
