@@ -1,13 +1,15 @@
-import { LoaderFunctionArgs } from "@remix-run/node";
+import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import {
   Form,
   useLoaderData,
   isRouteErrorResponse,
   useRouteError,
+  Outlet,
+  useFetcher,
 } from "@remix-run/react";
 import { FunctionComponent } from "react";
 import invariant from "tiny-invariant";
-import { ContactRecord, getContact } from "~/data";
+import { ContactRecord, getContact, updateContact } from "~/data";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { contactId } = params;
@@ -23,6 +25,18 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   //make loader happy 😁
   return { contact };
+};
+
+export const action = async ({ params, request }: ActionFunctionArgs) => {
+  const { contactId } = params;
+  invariant(contactId, "Missing contactId param");
+
+  const formData = await request.formData();
+  const favoriteUpdate = Object.fromEntries(formData);
+
+  return updateContact(contactId, {
+    favorite: favoriteUpdate?.favorite === "true",
+  });
 };
 
 export default function Contact() {
@@ -82,6 +96,7 @@ export default function Contact() {
           </Form>
         </div>
       </div>
+      <Outlet />
     </div>
   );
 }
@@ -89,10 +104,14 @@ export default function Contact() {
 const Favorite: FunctionComponent<{
   contact: Pick<ContactRecord, "favorite">;
 }> = ({ contact }) => {
-  const favorite = contact.favorite;
+  // const favorite = contact.favorite;
+  const fetcher = useFetcher();
+  const favorite = fetcher.formData
+    ? fetcher.formData.get("favorite") === "true"
+    : contact.favorite;
 
   return (
-    <Form method="post">
+    <fetcher.Form method="post">
       <button
         aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
         name="favorite"
@@ -100,7 +119,7 @@ const Favorite: FunctionComponent<{
       >
         {favorite ? "★" : "☆"}
       </button>
-    </Form>
+    </fetcher.Form>
   );
 };
 
@@ -109,6 +128,7 @@ export function ErrorBoundary() {
   if (isRouteErrorResponse(error)) {
     return (
       <div>
+        <h1>hey rabia loukhai</h1>
         <p>no contact found</p>
         <h1>message</h1>
         <pre>data:{error.data}</pre>
